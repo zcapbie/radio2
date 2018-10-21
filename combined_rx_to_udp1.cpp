@@ -26,6 +26,7 @@ namespace po = boost::program_options;
 static bool stop_signal_called = false;
 void sig_int_handler(int){stop_signal_called = true;}
 
+// recv_to_file used to write to a file, but I modified it to send data via udp
 template<typename samp_type> void recv_to_file(
     uhd::usrp::multi_usrp::sptr usrp,
     const std::string &cpu_format,
@@ -34,8 +35,10 @@ template<typename samp_type> void recv_to_file(
     const std::string &file,
     size_t samps_per_buff,
     unsigned long long num_requested_samples,
+/////////////////////////Nicole Addition //////////////////////
     const std::string &address,
     const std::string &myPort,
+//////////////////////////////////////////////////////////////
     double time_requested = 0.0,
     bool bw_summary = false,
     bool stats = false,
@@ -77,14 +80,14 @@ template<typename samp_type> void recv_to_file(
     boost::posix_time::time_duration ticks_diff;
     boost::system_time last_update = start;
     unsigned long long last_update_samps = 0;
-
-	// connect via udp
+//////////////////// Nicole Addition ///////////////////
+	// connect via udp 
 	uhd::transport::udp_simple::sptr udp_xport = uhd::transport::udp_simple::make_connected(address,myPort);
-
+////////////////////////////////////////////////////////
     typedef std::map<size_t,size_t> SizeMap;
     SizeMap mapSizes;
 
-/////////////////////////////////////// Loop for Recording ////////
+// Loop for Recording 
 
     while(not stop_signal_called and (num_requested_samples != num_total_samps or num_requested_samples == 0)) {
         boost::system_time now = boost::get_system_time();
@@ -126,11 +129,11 @@ template<typename samp_type> void recv_to_file(
         }
 
         num_total_samps += num_rx_samps;
-
+/////////////////Nicole Adddition /////////////////////////////////////
 	//write through udp
 	udp_xport->send(boost::asio::buffer(buff,num_rx_samps*sizeof(buff.front())));
 	//udp_xport->send(boost::asio::buffer((const char*)&buff.front(), num_rx_samps*sizeof(samp_type)));
-	
+//////////////////////////////////////////////////////////////////////	
        // if (outfile.is_open())
          //   outfile.write((const char*)&buff.front(), num_rx_samps*sizeof(samp_type));
 
