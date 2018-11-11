@@ -1,4 +1,4 @@
-//
+// Failed TCP attempt
 // Copyright 2010-2011,2014 Ettus Research LLC
 // Copyright 2018 Ettus Research, a National Instruments Company
 //
@@ -21,10 +21,72 @@
 #include <thread>
 #include <chrono>
 
+/* libaries for TCP */
+#include <sys/socket.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <netinet/in.h>
+#include <string.h>
+const int ETHERNET_PORT = 2222;
+const char* ETHERNET_IP = "169.254.234.25";
+
+//returns -1 if we can't get file descriptor, otherwise gives valid file descriptor
+int getTCPFileDescriptor(int portNum, char* ipAddr) {
+  int fd = -1;
+  if(fd = socket(AF_INET, SOCK_STREAM, 0) < 0) { //create tcp socket
+    std::cerr << "Error cannot create socket" << std::endl;
+    return -1;
+  }
+  
+  struct sockaddr_in address;
+  struct sockaddr_in serv_addr;
+
+  memset(&serv_addr, '0', sizeof(serv_addr));
+  serv_addr.sin_family = AF_INET;
+  serv_addr.sin_port = htons(portNUM);
+  
+  if(inet_pton(AF_INET, ipAddr, &serv_addr.sin_addr) <0 ) { //set ip addr
+    std::cerr << "Error cannot create socket" << std::endl;
+    return -1;
+  }
+  
+  if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr))<0) {//attempt to connect 
+    std::cerr << "Error cannot connect" << std::endl;
+    return -1;
+  }
+  
+  return fd;
+}
+
+//should send all of length
+ssize_t sendFullMessage(int fd, const void *buffer, size_t length) {
+  ssize_t bytesSentSoFar = 0;
+  while(ssize_t bytesSent = 0; bytesSentSoFar < length; bytesSentSoFar += bytesSent) {
+    bytesSent = send(fd, buffer, length-bytesSentSoFar);
+  }
+  return length;
+} 
+
+/*
+char* ptrToBinary = *whatever you send*
+size_t lengthOfBinaryMessage = *however you determine it*
+int tcpFileDescriptor = getTCPFileDescriptor(ETHERNET_PORT, ETHERNET_IP);
+
+
+ssize_t bytesSent = sendFullMessage(tcpFileDescriptor, ptrToBinary, lengthOfBinary, 0);
+
+*/
+
+
+
+
+
 namespace po = boost::program_options;
 
 static bool stop_signal_called = false;
 void sig_int_handler(int){stop_signal_called = true;}
+
+
 
 // recv_to_file used to write to a file, but I modified it to send data via udp
 template<typename samp_type> void recv_to_file(
